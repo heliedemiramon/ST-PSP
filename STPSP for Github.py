@@ -16,18 +16,18 @@
 # ==========================================================================================================================
 
 # In this code, a number N_shift = 3 of projected fringe patterns were used on both the reference plane and the object 
-# of study (a rivulet flowing down a 50.4° incline at a flow rate Q=45mL/min), with a total number 2*N_shift = 6 images
+# of study (a rivulet flowing down a 50.4° incline at a flow rate Q=45mL/min), with a total number 2*N_shift = 6 images.
 
-# All images should be stored in the path_im folder and the result of the algorithm (h.tif ie, reconstructed height map 
-# of the object) will be uploaded in the path folder.
-# Here the "Ref" images correspond to the reference plane and the "Def" images to the object of study
-# The number following "Ref" or "Def" correpsponds to the phase shift of the projected fringe pattern: 0 to a phase shift 
-# of 0, 1 to a phase shift of 2*pi/3, etc.
+# All images should be stored in the path_im folder and the result of the algorithm is h.tif, the reconstructed height map 
+# of the object.
+# Here the "Ref" images correspond to the reference plane and the "Def" images to the object of study.
+# The number following "Ref" or "Def" corresponds to the phase shift of the projected fringe pattern: 0 for a phase shift 
+# of 0, 1 for a phase shift of 2*pi/3, 1 for a phase shift of 4*pi/3.
 
-# The notations L, D and w0 are in agreement with the notations of Maurel [3] and correspond to the projection distance (L),
+# The notations L, D and w0 are in agreement with the notations of Maurel [3] and correspond to the projecting distance (L),
 # the distance between the camera and projector (D) and the fringe pattern frequency on the reference plane (w0).
 # L and D were pre-calculated through a calibration using a solid wedge. The sampling period T_sampling corresponds to the
-# period T as defined by Ri [1]
+# period T as defined by Ri [1].
 
 # ==========================================================================================================================
 
@@ -51,10 +51,11 @@ R_pix = 100/3326.4
 L, D = 804.74, 228.99
 w0 = 2*np.pi/(R_pix*T_sampling_float)
 
+# TO BE MODIFIED AFTER UPLOAD
 path = '/Users/heliedemiramon/Desktop/TheseLadhyx/Papier Experiments in Fluids/Github/Rivulet 45 mL_min/'
 path_im = path+'Exp/'
 
-#%% Selecting and sorting the file names for all images
+# Selecting and sorting the file names for all images
 
 file_list = os.listdir(path_im)
 
@@ -67,14 +68,13 @@ file_list = sorted(file_list)
 for t in range(2*N_shift):
     file_list[t] = path_im+file_list[t]
 
-# Reading the cropped images in greyscale using the cv2.imreading(file_name, 0) method; Img is defined as the list 
-# containing all array images
+# Reading the images in greyscale using the cv2.imreading(file_name, 0) method; Img is defined as the list 
+# containing all images as numpy.ndarrays
 
 Img = [cv2.imread(file_list[k],0) for k in range(2*N_shift)]
 (N_y,N_x) = Img[0].shape
 
-# Normalization of the original images; A and B are coded as a list of 2 arrays, one for the Def images, 
-# one for the Ref images
+# Normalization of the raw images; both A and B contain 2 arrays, one for the Def images, one for the Ref images
 
 A = [1/N_shift*sum(Img[k+p*N_shift] for k in range(N_shift)) for p in range(2)]
 B = [2/N_shift*(sum(Img[k+p*N_shift]*np.sin(2*np.pi*k/N_shift) for k in range(N_shift))**2+\
@@ -83,7 +83,9 @@ B = [2/N_shift*(sum(Img[k+p*N_shift]*np.sin(2*np.pi*k/N_shift) for k in range(N_
 for n in range(2*N_shift):
     Img[n] = (Img[n]-A[n//N_shift])/B[n//N_shift]
 
-# Down-sampling and interpolation calculations; all of these steps are detailed in Ri [1]
+# Down-sampling and interpolation calculations; all of these steps are detailed in Ri [1]. I_interpol contains 
+# 2*N_shift*T_sampling arrays of size (N_y,N_x) corresponding to the down sampled and interpolated intensity profiles for
+# both the object of study (p=0) and the reference plane (p=1).
 # The resulting array Psi contains the overall phase for both the reference plane (psi_ref) and the object (psi)
 # Both psi and psi_ref are then unwrapped using the 2d unwrapping algorithm of Herraez [2]
 
@@ -108,14 +110,15 @@ Psi = -np.arctan2(np.real(Psi_z), np.imag(Psi_z))
 
 delta_phi = psi - psi_ref
 
-# The interpolation is erroneous on the first/last T_sampling columns (since there is only one point on the right/left to perform
-# the interpolation with a linear polynomial); one can then simply crop the image on the left/right to avoid non-physical results on 
-# the left/right edges of the image
+# The interpolation is erroneous on the first/last T_sampling columns (since there is only one point available for the
+# linear polynomial interpolation); one can then simply crop the image on the left/right to avoid non-physical results on 
+# the left/right edges of the phase difference map.
 delta_phi = delta_phi[:,T_sampling:-T_sampling]
 
-# Since the unwrapping algorithm defines both psi and psi_ref modulo a constant, one needs to define the zero on the resulting
-# delta_phi map; in the following rivulet example, the height map of the object relative to the reference plane is 0 on the 
-# top left corner of the image, ie in a 10x10 pixels zone
+# Since the unwrapping algorithm defines both psi and psi_ref modulo a constant, one needs to define the zero on the
+# phase difference map; in the following rivulet example, the height map of the object relative to the reference plane
+# is 0 on the top left corner of the image, ie in a 10x10 pixels zone. The averaged value in this zone is subtracted from
+# the overall phase difference map.
 delta_phi -= np.mean(delta_phi[:10,:10])
 
 # Calculation of the height map with the phase-to-height relation of Maurel [3] (neglecting the spatial parallax error,
@@ -123,8 +126,8 @@ delta_phi -= np.mean(delta_phi[:10,:10])
 h = L*delta_phi/(delta_phi-w0*D)
 
 plt.imshow(h, cmap='inferno')
-plt.colorbar(shrink=0.5)
+plt.colorbar(shrink=0.7, label='h (mm)', location='bottom', pad=0.05)
 plt.xticks([])
 plt.yticks([])
-plt.title('Reconstructed height map of the rivulet')
+plt.title('Reconstructed height map of the rivulet', pad=10)
 plt.show()
