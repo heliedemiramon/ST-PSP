@@ -18,7 +18,7 @@ This code is derived from the method detailed in the paper by Ri 2019 [1]; it us
   A total of **N_shift = 3** projected fringe patterns were used on both the reference plane and the object of study. This results in a total of **2 × N_shift = 6 images**.
 
 - **Image Storage and Output:**  
-  - All images should be stored in the `path_im` folder.  
+  - All images (available in the GitHub `Data\Exp` folder) must be copied into a directory, and the `path_im` variable should be adjusted accordingly in the code. 
   - The result of the algorithm is a file named `h.tif`, which contains the reconstructed height map of the object.
 
 - **Image Naming Convention:**  
@@ -44,4 +44,4 @@ The sampling period \(**T_sampling**\) corresponds to the period **T** as define
 
 ## Calibration Details
 
-Values for **L** and **D** were pre-calculated through a calibration process using a solid wedge. Detailed information about the calibration wedge is available in the `Calibration wedge` folder.
+Values for **L** and **D** were pre-calculated through a calibration process using a solid wedge. Detailed information about the calibration wedge is available in the `Data\Calibration wedge` folder.
