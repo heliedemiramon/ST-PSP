@@ -38,4 +38,10 @@ The notations L, D, and w0 are consistent with those in Maurel [3]:
 - **D**: Distance between the camera and the projector.  
 - **w0**: Fringe pattern frequency on the reference plane.
 
-Values for L and D were pre-calculated through a calibration using a solid wedge. The sampling period \(T_sampling\) corresponds to the period T as defined by Ri [1].
+The sampling period \(**T_sampling**\) corresponds to the period **T** as defined by Ri [1].
+
+---
+
+## Calibration Details
+
+Values for **L** and **D** were pre-calculated through a calibration process using a solid wedge. Detailed information about the calibration wedge is available in the `Calibration wedge` folder.
